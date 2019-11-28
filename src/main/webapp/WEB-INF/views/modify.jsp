@@ -1,33 +1,42 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
-</head>
-<body>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
-	<jsp:include page="./layout/header.jsp"></jsp:include>
-	<h2>글쓰기</h2>
-	<form action="/board/modify" method="post" enctype="multipart/form-data"> <%-- 첨부파일 받을때 enctype 해야함 --%>
-		<input type="hidden" value="${data.id}" name="id">
-		<div class="form-group">
-			<label for="title">제목</label> 
-			<input type="text" name="title" id="title" value="${data.title}" placeholder="제목을 입력하세요">
-		</div>
-		<div class="form-group">
-			<label for="content">글내용</label>
-			<textarea rows="10" cols="30" name="content" id="content" placeholder="글 내용을 입력하세요">${data.content}</textarea>
-		</div>
-		<div class="form-group">
-			<label for="file">파일첨부</label> 
-			<input type="file" name="file" id="file">
-		</div>
+<jsp:include page="layout/header.jsp" />
 
-		<input type="submit" value="수정하기">
-	</form>
-
+<div class="container">
+	<div class="row">
+		<form action="/modify" method="post" enctype="multipart/form-data">
+			<table class="table table-striped" style="text-align: center; border: 1px solid #dddddd">
+				<thead>
+					<tr>
+						<th colspan="2" style="background-color: #eeeeee; text-align: center;">게시판 글쓰기</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<input type="text" class="form-control" placeholder=" 글 제목" name="no" maxlength="50" value="${modify_view.no }" readonly />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<input type="text" class="form-control" placeholder=" 글 제목" name="title" maxlength="50" value="${modify_view.title}" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<textarea class="form-control" placeholder=" 글 내용" name="content" style="height: 350px;" maxlength="2048">${modify_view.content }</textarea>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<input type="file" name="file" />
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<a class="btn btn-primary" href="/">돌아가기</a> <input type="submit" class="btn btn-primary" value="수정">
+		</form>
+	</div>
+</div>
 </body>
 </html>

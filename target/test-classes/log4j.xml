@@ -11,7 +11,7 @@
 	</appender>
 	
 	<!-- Application Loggers -->
-	<logger name="com.edu.yydh">
+	<logger name="com.yydh.www">
 		<level value="info" />
 	</logger>
 	

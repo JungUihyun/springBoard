@@ -6,29 +6,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
-
-import com.yydh.www.vo.BoardVO;
 
 public class BoardDAO {
-	private static BoardDAO instance = new BoardDAO();
-
-	private BoardDAO() {
-	}
-
-	public static BoardDAO getIns() {
-		return instance;
-	}
 	
-	// DB Connection
+	//Database Connection Area
 	private Connection getConnection() {
 		Connection conn = null;
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			String cString = "jdbc:mysql://gondr.asuscomm.com/twins200202?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Seoul";
-			String id = "twins200202";
-			String password = "1234";
-			conn = DriverManager.getConnection(cString, id, password);
+			Class.forName("com.mysql.jdbc.Driver");
+			String dsn = "jdbc:mysql://gondr.asuscomm.com/kanozo12?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Seoul";
+			conn = DriverManager.getConnection(dsn, "kanozo12", "1234");
 		} catch (ClassNotFoundException e) {
 			System.out.println("Driver Not Found");
 		} catch (Exception e) {
@@ -38,172 +25,171 @@ public class BoardDAO {
 		return conn;
 	}
 	
-	// Board write
-	public int write(BoardVO data) {
+	//Data Posting Area
+	public boolean posting(BoardDTO dto) {
 		Connection conn = null;
-		PreparedStatement ps = null;
-
+		PreparedStatement pstmt = null;
+		boolean result = false;
 		try {
-			String sql = "INSERT INTO boards (title, content, writer, files) VALUES(?, ?, ?, ?)";
 			conn = getConnection();
-			
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, data.getTitle());
-			ps.setString(2, data.getContent());
-			ps.setString(3, data.getWriter());
-			ps.setString(4, data.getFiles()); // 파일은 일단 공백으로
 
-			return ps.executeUpdate();
+			pstmt = conn.prepareStatement(StringQuery.INSERT_POSTING);
+			pstmt.setString(1, dto.getTitle());
+			pstmt.setString(2, dto.getWriter());
+			pstmt.setString(3, dto.getContent());
+			pstmt.setString(4, dto.getFileName());
+			result = pstmt.execute();
+			result = true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return -1;
-		} finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (conn != null) conn.close(); } catch (SQLException e) {}
+			return false;
 		}
+		return result;
 	}
 	
-	// Board view
-	public BoardVO view(int id) {
-		String sql = "SELECT * FROM boards WHERE id = ?";
+	//board page get posts area  
+	public ArrayList<BoardDTO> selectPosting(int page) {
 		Connection conn = null;
+		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
-	
-		try {
-			conn = getConnection();
-			ps = conn.prepareStatement(sql);
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			
-			if(rs.next()) {
-				BoardVO data = new BoardVO();
-				data.setId(rs.getInt("id"));
-				data.setTitle(rs.getString("title"));
-				data.setContent(rs.getString("content"));
-				data.setWriter(rs.getString("writer"));
-				data.setFiles(rs.getString("files"));
-				System.out.println(data);
-				return data;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (rs != null) rs.close(); } catch (SQLException e) {}
-			try { if (conn != null)	conn.close(); } catch (SQLException e) {}
+
+		if (page <= 0) {
+			page = 1;
 		}
-		
-		return null;
-	}
-	
-	// Board view list
-	public List<BoardVO> getList(int page) {
-		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
+		int start = (page - 1) * 10;
 
-		List<BoardVO> list = new ArrayList<BoardVO>();
+		String sql = "select no, title, writer from jsp_board ORDER BY no DESC LIMIT ?, 10";
+
+		ArrayList<BoardDTO> userList = new ArrayList<BoardDTO>();
 
 		try {
-			String sql = "SELECT * FROM boards ORDER BY id DESC LIMIT ?, 10";
 			conn = getConnection();
-			ps = conn.prepareStatement(sql);
-			ps.setInt(1, (page - 1) * 10);
-			rs = ps.executeQuery();
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setInt(1, start);
+			rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				BoardVO temp = new BoardVO();
-				temp.setId(rs.getInt("id"));
-				temp.setTitle(rs.getString("title"));
-				temp.setWriter(rs.getString("writer"));
-				list.add(temp);
+				BoardDTO dto = new BoardDTO(rs.getInt(1), rs.getString(2), rs.getString(3));
+				userList.add(dto);
 			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return userList;
+	}
+	
+	//post content view area
+	public BoardDTO contentView(int bno) {
+		BoardDTO dto = new BoardDTO();
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		String SQL = "SELECT * FROM jsp_board WHERE no = ?";
+
+		try {
+			conn = getConnection();
+			pstmt = conn.prepareStatement(SQL);
+			pstmt.setInt(1, bno);
+			rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				int no = rs.getInt("no");
+				String title = rs.getString("title");
+				String writer = rs.getString("writer");
+				String content = rs.getString("content");
+				String filename = rs.getString("filename");
+				dto = new BoardDTO(no, title, writer, content, filename);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return dto;
+	}
+	
+	//user post info get 
+	public BoardDTO modifyView(int bno) {
+		BoardDTO dto = new BoardDTO();
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		String SQL = "SELECT * FROM jsp_board WHERE no = ?";
+
+		try {
+			conn = getConnection();
+			pstmt = conn.prepareStatement(SQL);
+			pstmt.setInt(1, bno);
+			rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				String title = rs.getString("title");
+				String writer = rs.getString("writer");
+				String content = rs.getString("content");
+				String fileName = rs.getString("filename");
+				dto = new BoardDTO(bno, title, writer, content, fileName);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return dto;
+	}
+	
+	//post modify area 
+	public void modify(int no, String title, String content, String file) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+
+		String SQL = "UPDATE jsp_board SET title = ?, content = ?, filename = ? WHERE no = ?";
+
+		try {
+			conn = getConnection();
+
+			pstmt = conn.prepareStatement(SQL);
+
+			pstmt.setString(1, title);
+			pstmt.setString(2, content);
+			pstmt.setString(3, file);
+			pstmt.setInt(4, no);
+
+			int result = pstmt.executeUpdate();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//Database recode delete area
+	public void delete(String no) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+
+		try {
+			conn = getConnection();
+			String query = "delete from jsp_board where no=?";
+			pstmt = conn.prepareStatement(query);
+			pstmt.setInt(1, Integer.parseInt(no));
+			int result = pstmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (rs != null) rs.close(); } catch (SQLException e) {}
-			try { if (conn != null) conn.close(); } catch (SQLException e) {}
+			try {
+				if (pstmt != null)
+					pstmt.close();
+				if (conn != null)
+					conn.close();
+			} catch (Exception e2) {
+
+				e2.printStackTrace();
+			}
 		}
-		
-		return list;
 	}
-	
-	// Board select
-	public BoardVO selectBoard(int id) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        String sql = "SELECT id, title, content, writer, files FROM boards WHERE id=?";
-        try {
-            conn = this.getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            rs = ps.executeQuery();
-            if(rs.next()) {
-            	BoardVO temp = new BoardVO();
-				temp.setId(rs.getInt("id"));
-				temp.setTitle(rs.getString("title"));
-				temp.setContent(rs.getString("content"));
-				temp.setWriter(rs.getString("writer"));
-				temp.setFiles(rs.getString("files"));
-				
-				return temp;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (rs != null) rs.close(); } catch (SQLException e) {}
-			try { if (conn != null)	conn.close(); } catch (SQLException e) {}
-		}
-		return null;
-	}
-	
-	// Modify view
-	public int modify(BoardVO board) {
-        int rowCount = 0;
-        Connection conn = null;
-        PreparedStatement ps = null;
-        String sql = "UPDATE boards SET title=?, content=?, files=? WHERE id=?";
-        try {
-            conn = this.getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, board.getTitle());
-            ps.setString(2, board.getContent());
-            ps.setString(3, board.getFiles());
-            ps.setInt(4, board.getId());
-            rowCount = ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (conn != null)	conn.close(); } catch (SQLException e) {}
-		}
-        return rowCount;
-    }
-	
-	// Delete
-	public int delete(int id) {
-		String sql = "DELETE FROM boards WHERE id = ?";
-		Connection conn = null;
-		PreparedStatement ps = null;
-		
-		try {
-			conn = getConnection();
-			ps = conn.prepareStatement(sql);
-			ps.setInt(1, id);
-			int rs = ps.executeUpdate();
-			
-			return rs;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return -1;
-		}finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (conn != null) conn.close(); } catch (SQLException e) {}
-		}
-		
-	}
+
 }

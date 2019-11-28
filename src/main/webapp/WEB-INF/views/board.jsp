@@ -1,29 +1,53 @@
+<%@page import="com.yydh.www.model.BoardDTO"%>
+<%@page import="java.util.List"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>    
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>게시판</title>
 </head>
+
 <body>
-	<jsp:include page="./layout/header.jsp"></jsp:include>
-	<h2>게시판</h2>
-	<table width="800">
-		<tr>
-			<th>글번호</th><th width="70%">글제목</th><th>글쓴이</th>
-		</tr>
-		<c:forEach var="vo" items="${list}">
-			<tr>
-				<td>${vo.id}</td>
-				<td>
-					<a href="/board/view?id=${vo.id}">${vo.title}</a>
-				</td>
-				<td>${vo.writer}</td>
-			</tr>
-		</c:forEach>
-		
-	</table>
-	<a href="/board/write">글쓰기</a>
+
+	<jsp:include page="layout/header.jsp" />
+
+	<h2 align="center">
+		<b>전체 게시글 보기</b>
+	</h2>
+
+	<div class="container">
+		<div class="row">
+			<table class="table table-striped" style="text-align: center; border: 1px solid #dddddd">
+				<thead>
+					<tr>
+						<th style="background-color: #eeeeee; text-align: center;">번호</th>
+						<th style="background-color: #eeeeee; text-align: center;">제목</th>
+						<th style="background-color: #eeeeee; text-align: center;">작성자</th>
+					</tr>
+				</thead>
+				<tbody>
+					<c:forEach items="${list}" var="dto">
+						<tr>
+							<td>${dto.no}</td>
+							<td>
+								<a href="contentView?no=${dto.no}">${dto.title}</a>
+							</td>
+							<td>${dto.writer}</td>
+						</tr>
+					</c:forEach>
+				</tbody>
+			</table>
+			<c:if test="${not empty id}">
+				<a href="write" class="btn btn-primary">글쓰기</a>
+			</c:if>
+		</div>
+	</div>
+
+	<jsp:include page="layout/footer.jsp" />
+
 </body>
+
 </html>

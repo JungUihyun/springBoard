@@ -6,20 +6,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.yydh.www.vo.UserVO;
-
 public class MemberDAO {
-	public static MemberDAO instance = new MemberDAO();
-	
-	// DB Connection
 	private Connection getConnection() {
 		Connection conn = null;
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			String cString = "jdbc:mysql://gondr.asuscomm.com/twins200202?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Seoul";
-			String id = "twins200202";
-			String password = "1234";
-			conn = DriverManager.getConnection(cString, id, password);
+			Class.forName("com.mysql.jdbc.Driver");
+			String dsn = "jdbc:mysql://gondr.asuscomm.com/kanozo12?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Seoul";
+			conn = DriverManager.getConnection(dsn, "kanozo12", "1234");
 		} catch (ClassNotFoundException e) {
 			System.out.println("Driver Not Found");
 		} catch (Exception e) {
@@ -29,70 +22,60 @@ public class MemberDAO {
 		return conn;
 	}
 
-	// Register
-	public boolean register(String name, String id, String password) {
+	// Sign Up Area
+	public boolean insertMember(MemberDTO dto) {
 		boolean result = false;
 		Connection conn = null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
+		PreparedStatement pstmt = null;
 
 		try {
 			conn = getConnection();
 
-			String sql = "INSERT INTO users(id, name, password) VALUES(?, ?, ?)";
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, id);
-			ps.setString(2, name);
-			ps.setString(3, password);
+			pstmt = conn.prepareStatement(StringQuery.INSERT_MEMBER);
+			pstmt.setString(1, dto.getId());
+			pstmt.setString(2, dto.getPass());
+			pstmt.setString(3, dto.getName());
 
-			int n = ps.executeUpdate();
-			
-			if (n > 0) result = true;
-
+			int n = pstmt.executeUpdate();
+			if (n > 0) {
+				result = true;
+			}
+			System.out.println("Insert Ok...");
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (rs != null) rs.close(); } catch (SQLException e) {}
-			try { if (conn != null)	conn.close(); } catch (SQLException e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return result;
 	}
 
-	// Login
-	public UserVO login(String id, String password) {
-		boolean result = false;
+	// login Area
+	public int loginCheck(String id, String pass) {
+		int result = -1;
 		Connection conn = null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
-		
+		PreparedStatement pstmt = null;
+
 		try {
 			conn = getConnection();
 
-			String sql = "SELECT * FROM users WHERE id = ? AND password = ?";
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, id);
-			ps.setString(2, password);
-			rs = ps.executeQuery();
-			
-			if(!rs.next()) {
-				return null;
-			} else {
-				UserVO user = new UserVO();
-				user.setId(rs.getString("id"));
-				user.setName(rs.getString("name"));
-				
-				return user;
+			pstmt = conn.prepareStatement(StringQuery.LOGIN_CHECK);
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+			if (rs.next()) {
+				String dbpass = rs.getString("pass");
+				if (dbpass.equals(pass)) {
+					result = 1;
+				} else {
+					result = 0;
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			try { if (ps != null) ps.close(); } catch (SQLException e) {}
-			try { if (rs != null) rs.close(); } catch (SQLException e) {}
-			try { if (conn != null) conn.close(); } catch (SQLException e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return null;
+		return result;
 	}
-
-
 }

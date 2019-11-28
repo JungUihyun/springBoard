@@ -1,29 +1,45 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<!doctype html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+<meta charset="UTF-8" />
+<title>로그인</title>
 </head>
 <body>
-	<jsp:include page="./layout/header.jsp"></jsp:include>
-	<h2>글쓰기</h2>	
-	<form action="/board/write" method="post" enctype="multipart/form-data"> <%-- 첨부파일 받을때 enctype 해야함 --%>
-		<div class="form-group">
-			<label for="title">제목</label>
-			<input type="text" name="title" id="title" placeholder="제목을 입력하세요">
+	<jsp:include page="layout/header.jsp" />
+	<div class="container">
+		<div class="row">
+			<form action="/write" method="post" enctype="multipart/form-data">
+				<table class="table table-striped" style="text-align: center; border: 1px solid #dddddd">
+					<thead>
+						<tr>
+							<th colspan="2" style="background-color: #eeeeee; text-align: center;">게시판 글쓰기</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<input type="text" class="form-control" placeholder=" 글 제목" name="title" maxlength="50" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<textarea type="text" class="form-control" placeholder=" 글 내용" name="content" style="height: 350px;" maxlength="2048"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="file" name="fileName" />
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<a class="btn btn-primary" href="/">돌아가기</a> <input type="submit" class="btn btn-primary pull-right" value="글쓰기">
+			</form>
 		</div>
-		<div class="form-group">
-			<label for="content">글내용</label>
-			<textarea rows="10" cols="30" name="content" id="content" placeholder="글 내용을 입력하세요"></textarea>
-		</div>
-		<div class="form-group">
-			<label for="file">파일첨부</label>
-			<input type="file" name="file" id="file" accept="image/*">
-		</div>
-		
-		<input type="submit" value="글쓰기">
-	</form>
+	</div>
 </body>
+
+<jsp:include page="layout/footer.jsp" />
 </html>
